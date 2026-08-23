@@ -50,6 +50,27 @@ local function StopEverything()
     StopMovement("rightStrafe")
 end
 
+local function StartDirectionFromTouch(dx, dy)
+    local threshold = dragRadius * 0.30
+    local horizontal = math.abs(dx) > math.abs(dy)
+
+    -- Protected movement APIs are called only from OnMouseDown, which is a
+    -- hardware event. Calling them from OnUpdate is blocked by the 1.12.1
+    -- secure-action rules.
+    SetMovement("forward", dy > threshold)
+    SetMovement("backward", dy < -threshold)
+
+    if math.abs(dx) > threshold and horizontal then
+        if dy >= 0 then
+            SetMovement("rightTurn", dx > 0)
+            SetMovement("leftTurn", dx < 0)
+        else
+            SetMovement("rightStrafe", dx > 0)
+            SetMovement("leftStrafe", dx < 0)
+        end
+    end
+end
+
 -- Lua 5.0-compatible atan2 replacement. atan2 gives the signed angle from +X.
 local function Angle(y, x)
     if x > 0 then return math.atan(y / x) end
@@ -86,7 +107,6 @@ end
 
 function TouchController_JoystickOnLoad()
     this:SetClampedToScreen(true)
-    TouchControllerKnob:SetClampedToScreen(true)
 end
 
 function TouchController_JoystickMouseDown()
@@ -95,6 +115,13 @@ function TouchController_JoystickMouseDown()
             this:StartMoving()
         else
             dragging = true
+            local scale = TouchControllerJoystick:GetEffectiveScale()
+            local cursorX, cursorY = GetCursorPosition()
+            cursorX = cursorX / scale
+            cursorY = cursorY / scale
+            local centerX = TouchControllerJoystick:GetLeft() + joystickRadius
+            local centerY = TouchControllerJoystick:GetBottom() + joystickRadius
+            StartDirectionFromTouch(cursorX - centerX, cursorY - centerY)
         end
     end
 end
@@ -135,34 +162,8 @@ function TouchController_JoystickUpdate(elapsed)
     TouchControllerKnob:ClearAllPoints()
     TouchControllerKnob:SetPoint("CENTER", TouchControllerJoystick, "CENTER", dx, dy)
 
-    -- 30% of the usable radius is the radial deadzone. The Y component is
-    -- compared independently, so diagonal pushes can move and turn together.
-    local threshold = dragRadius * 0.30
-    SetMovement("forward", dy > threshold)
-    SetMovement("backward", dy < -threshold)
-
-    -- atan2's angle is measured from +X: right is 0, up is pi/2, left is
-    -- pi, and down is -pi/2. Dominant horizontal pushes turn above center
-    -- and strafe below center, which makes both actions reachable by touch.
-    local horizontal = math.abs(dx) > math.abs(dy)
-    if math.abs(dx) > threshold and horizontal then
-        if dy >= 0 then
-            SetMovement("rightTurn", dx > 0)
-            SetMovement("leftTurn", dx < 0)
-            SetMovement("rightStrafe", false)
-            SetMovement("leftStrafe", false)
-        else
-            SetMovement("rightStrafe", dx > 0)
-            SetMovement("leftStrafe", dx < 0)
-            SetMovement("rightTurn", false)
-            SetMovement("leftTurn", false)
-        end
-    else
-        SetMovement("rightTurn", false)
-        SetMovement("leftTurn", false)
-        SetMovement("rightStrafe", false)
-        SetMovement("leftStrafe", false)
-    end
+    -- Movement is deliberately not changed here. OnUpdate is not a hardware
+    -- event in Vanilla and protected movement calls would be blocked.
 end
 
 function TouchController_OverlayOnLoad()
