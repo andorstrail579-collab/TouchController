@@ -16,13 +16,8 @@ local dpadButtons = {}
 
 local function StopMovement(name)
     if moveState[name] then
-        if name == "forward" then MoveForwardStop();
-        elseif name == "backward" then MoveBackwardStop();
-        elseif name == "leftTurn" then TurnLeftStop();
-        elseif name == "rightTurn" then TurnRightStop();
-        elseif name == "leftStrafe" then StrafeLeftStop();
-        elseif name == "rightStrafe" then StrafeRightStop();
-        end
+        -- Movement functions are protected in this client and cannot be
+        -- called by an addon, even from a button callback.
         moveState[name] = nil
     end
 end
@@ -30,13 +25,6 @@ end
 local function SetMovement(name, active)
     if active and not moveState[name] then
         moveState[name] = true
-        if name == "forward" then MoveForwardStart();
-        elseif name == "backward" then MoveBackwardStart();
-        elseif name == "leftTurn" then TurnLeftStart();
-        elseif name == "rightTurn" then TurnRightStart();
-        elseif name == "leftStrafe" then StrafeLeftStart();
-        elseif name == "rightStrafe" then StrafeRightStart();
-        end
     elseif not active then
         StopMovement(name)
     end
@@ -52,24 +40,8 @@ local function StopEverything()
 end
 
 local function StartDirectionFromTouch(dx, dy)
-    local threshold = dragRadius * 0.30
-    local horizontal = math.abs(dx) > math.abs(dy)
-
-    -- Protected movement APIs are called only from OnMouseDown, which is a
-    -- hardware event. Calling them from OnUpdate is blocked by the 1.12.1
-    -- secure-action rules.
-    SetMovement("forward", dy > threshold)
-    SetMovement("backward", dy < -threshold)
-
-    if math.abs(dx) > threshold and horizontal then
-        if dy >= 0 then
-            SetMovement("rightTurn", dx > 0)
-            SetMovement("leftTurn", dx < 0)
-        else
-            SetMovement("rightStrafe", dx > 0)
-            SetMovement("leftStrafe", dx < 0)
-        end
-    end
+    -- Kept as a harmless visual state hook. The stock client does not allow
+    -- an addon to translate this state into WASD movement.
 end
 
 -- Lua 5.0-compatible atan2 replacement. atan2 gives the signed angle from +X.
