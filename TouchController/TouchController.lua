@@ -199,7 +199,15 @@ local function UpdateActionCooldown(button)
     if not button.cooldown then return end
     local start, duration, enabled = GetActionCooldown(button:GetID())
     if start and duration and duration > 0 then
-        CooldownFrame_SetTimer(button.cooldown, start, duration, enabled)
+        -- The Pocket Realm 1.12.1 client does not expose Cooldown as a
+        -- runtime CreateFrame type. Use the classic cooldown texture as a
+        -- safe visual overlay instead of creating a Cooldown frame.
+        button.cooldown:Show()
+        if enabled == 0 then
+            button.cooldown:SetVertexColor(0.35, 0.35, 0.35, 0.75)
+        else
+            button.cooldown:SetVertexColor(1, 1, 1, 0.75)
+        end
     else
         button.cooldown:Hide()
     end
@@ -274,7 +282,8 @@ function TouchController_CreateActionButtons()
         button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 3, -3)
         button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -3, 3)
         button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-        button.cooldown = CreateFrame("Cooldown", "TouchActionButton" .. i .. "Cooldown", button)
+        button.cooldown = button:CreateTexture(nil, "OVERLAY")
+        button.cooldown:SetTexture("Interface\\Cooldown\\cooldown")
         button.cooldown:SetAllPoints(button)
         button.cooldown:Hide()
         if i <= 6 then
