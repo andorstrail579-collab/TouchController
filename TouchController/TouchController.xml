@@ -1,0 +1,77 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Script file="TouchController.lua"/>
+
+    <Frame name="TouchControllerRoot" parent="UIParent" frameStrata="MEDIUM" movable="true" hidden="false">
+        <Size>
+            <AbsDimension x="1" y="1"/>
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+        <Scripts>
+            <OnLoad>TouchController_OnLoad();</OnLoad>
+        </Scripts>
+    </Frame>
+
+    <Frame name="TouchControllerOverlay" parent="UIParent" frameStrata="BACKGROUND" enableMouse="true" hidden="false">
+        <Size>
+            <AbsDimension x="1" y="1"/>
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT"/>
+            <Anchor point="BOTTOMRIGHT"/>
+        </Anchors>
+        <Scripts>
+            <OnLoad>TouchController_OverlayOnLoad();</OnLoad>
+            <OnMouseDown>TouchController_OverlayMouseDown(arg1);</OnMouseDown>
+            <OnMouseUp>TouchController_OverlayMouseUp(arg1);</OnMouseUp>
+            <OnUpdate>TouchController_OverlayUpdate(arg1);</OnUpdate>
+        </Scripts>
+    </Frame>
+
+    <Frame name="TouchControllerJoystick" parent="UIParent" frameStrata="HIGH" enableMouse="true" movable="true">
+        <Size>
+            <AbsDimension x="190" y="190"/>
+        </Size>
+        <Anchors>
+            <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="34" y="34"/>
+        </Anchors>
+        <Backdrop bgFile="Interface\Buttons\WHITE8X8" edgeFile="Interface\Tooltips\UI-Tooltip-Border"
+                  tile="true" tileSize="8" edgeSize="3" insets="{left = 3, right = 3, top = 3, bottom = 3}">
+            <BackgroundColor r="0.05" g="0.08" b="0.12" a="0.58"/>
+            <BorderColor r="0.35" g="0.65" b="0.95" a="0.85"/>
+        </Backdrop>
+        <Scripts>
+            <OnLoad>TouchController_JoystickOnLoad();</OnLoad>
+            <OnMouseDown>TouchController_JoystickMouseDown();</OnMouseDown>
+            <OnMouseUp>TouchController_JoystickMouseUp();</OnMouseUp>
+            <OnUpdate>TouchController_JoystickUpdate(arg1);</OnUpdate>
+        </Scripts>
+    </Frame>
+
+    <Frame name="TouchControllerKnob" parent="TouchControllerJoystick" frameStrata="HIGH">
+        <Size>
+            <AbsDimension x="76" y="76"/>
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+        <Backdrop bgFile="Interface\Buttons\WHITE8X8" edgeFile="Interface\Tooltips\UI-Tooltip-Border"
+                  tile="true" tileSize="8" edgeSize="3" insets="{left = 3, right = 3, top = 3, bottom = 3}">
+            <BackgroundColor r="0.18" g="0.55" b="0.92" a="0.9"/>
+            <BorderColor r="0.75" g="0.92" b="1" a="1"/>
+        </Backdrop>
+    </Frame>
+
+    <Frame name="TouchControllerBars" parent="UIParent" frameStrata="HIGH" movable="true" enableMouse="true">
+        <Size>
+            <AbsDimension x="1" y="1"/>
+        </Size>
+        <Anchors>
+            <Anchor point="BOTTOMRIGHT" x="-28" y="28"/>
+        </Anchors>
+        <Scripts>
+            <OnLoad>TouchController_CreateActionButtons();</OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>
