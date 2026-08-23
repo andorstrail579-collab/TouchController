@@ -166,7 +166,8 @@ function TouchController_JoystickUpdate(elapsed)
 end
 
 function TouchController_OverlayOnLoad()
-    this:RegisterForClicks("LeftButtonDown", "LeftButtonUp", "RightButtonDown", "RightButtonUp")
+    -- Vanilla 1.12.1 does not provide RegisterForClicks() on ordinary
+    -- frames. EnableMouse plus the mouse scripts is sufficient here.
 end
 
 function TouchController_OverlayMouseDown(button)
@@ -193,6 +194,7 @@ function TouchController_OverlayMouseUp(button)
 end
 
 local function UpdateActionCooldown(button)
+    if not button.cooldown then return end
     local start, duration, enabled = GetActionCooldown(button:GetID())
     if start and duration and duration > 0 then
         CooldownFrame_SetTimer(button.cooldown, start, duration, enabled)
@@ -207,7 +209,11 @@ function TouchController_CreateActionButtons()
         local button = CreateFrame("Button", "TouchActionButton" .. i, TouchControllerBars, "ActionButtonTemplate")
         button:SetID(i)
         button:SetScale(1.15)
-        button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        -- ActionButtonTemplate in some Vanilla 1.12.1 clients does not
+        -- create the cooldown child when the button is made dynamically.
+        button.cooldown = CreateFrame("Cooldown", "TouchActionButton" .. i .. "Cooldown", button)
+        button.cooldown:SetAllPoints(button)
+        button.cooldown:Hide()
         if i <= 6 then
             button:SetPoint("BOTTOMRIGHT", TouchControllerBars, "BOTTOMRIGHT", -((i - 1) * 46), 0)
         else
