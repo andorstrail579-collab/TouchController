@@ -12,6 +12,7 @@ local overlayDownTime = 0
 local mouselookActive = false
 local moveState = {}
 local actionButtons = {}
+local dpadButtons = {}
 
 local function StopMovement(name)
     if moveState[name] then
@@ -204,14 +205,75 @@ local function UpdateActionCooldown(button)
     end
 end
 
+local function CreateDPadButton(name, label, x, y, movement)
+    local button = CreateFrame("Button", name, UIParent)
+    button:SetFrameStrata("HIGH")
+    button:SetWidth(58)
+    button:SetHeight(58)
+    button:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x, y)
+    button:EnableMouse(true)
+    button:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8X8",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 3,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 }
+    })
+    button:SetBackdropColor(0.08, 0.12, 0.18, 0.86)
+    button:SetBackdropBorderColor(0.35, 0.65, 0.95, 0.95)
+
+    local text = button:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    text:SetPoint("CENTER", button, "CENTER", 0, 0)
+    text:SetText(label)
+    text:SetTextColor(1, 1, 1, 1)
+
+    button:SetScript("OnMouseDown", function()
+        SetMovement(movement, true)
+        button:SetBackdropColor(0.18, 0.45, 0.72, 0.95)
+    end)
+    button:SetScript("OnMouseUp", function()
+        SetMovement(movement, false)
+        button:SetBackdropColor(0.08, 0.12, 0.18, 0.86)
+    end)
+    button:SetScript("OnHide", function()
+        SetMovement(movement, false)
+    end)
+    button:Show()
+    dpadButtons[movement] = button
+end
+
+local function CreateDPad()
+    -- The D-pad is placed immediately to the right of the joystick.
+    CreateDPadButton("TouchDPadUp", "^", 238, 112, "forward")
+    CreateDPadButton("TouchDPadLeft", "<", 174, 48, "leftStrafe")
+    CreateDPadButton("TouchDPadDown", "v", 238, 48, "backward")
+    CreateDPadButton("TouchDPadRight", ">", 302, 48, "rightStrafe")
+end
+
 function TouchController_CreateActionButtons()
     local i
     for i = 1, 12 do
-        local button = CreateFrame("Button", "TouchActionButton" .. i, TouchControllerBars, "ActionButtonTemplate")
+        local button = CreateFrame("Button", "TouchActionButton" .. i, TouchControllerBars)
         button:SetID(i)
+        button:SetWidth(42)
+        button:SetHeight(42)
         button:SetScale(1.15)
-        -- ActionButtonTemplate in some Vanilla 1.12.1 clients does not
-        -- create the cooldown child when the button is made dynamically.
+        button:EnableMouse(true)
+        button:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8X8",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true,
+            tileSize = 8,
+            edgeSize = 2,
+            insets = { left = 2, right = 2, top = 2, bottom = 2 }
+        })
+        button:SetBackdropColor(0.04, 0.04, 0.04, 0.9)
+        button:SetBackdropBorderColor(0.65, 0.65, 0.65, 1)
+        button.icon = button:CreateTexture(nil, "ARTWORK")
+        button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 3, -3)
+        button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -3, 3)
+        button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
         button.cooldown = CreateFrame("Cooldown", "TouchActionButton" .. i .. "Cooldown", button)
         button.cooldown:SetAllPoints(button)
         button.cooldown:Hide()
@@ -221,11 +283,15 @@ function TouchController_CreateActionButtons()
             button:SetPoint("BOTTOMRIGHT", TouchControllerBars, "BOTTOMRIGHT", -((i - 7) * 46), 48)
         end
         button:SetScript("OnClick", function()
-            UseAction(this:GetID())
+            UseAction(button:GetID())
         end)
         button:SetScript("OnUpdate", function()
-            UpdateActionCooldown(this)
+            local texture = GetActionTexture(button:GetID())
+            if texture then button.icon:SetTexture(texture) else button.icon:SetTexture(nil) end
+            UpdateActionCooldown(button)
         end)
+        button:Show()
         actionButtons[i] = button
     end
+    CreateDPad()
 end
